@@ -22,7 +22,7 @@ python PlantPathology.py -train /PATH/TO/CSV -test /PATH/TO/CSV
 ```             
 Example
 ```
-python PlantPathology.py -train Dataset/train.csv -test Dataset/test.csv -lr 0.001 -output result.csv -e 100
+python PlantPathology.py -train /train.csv -test /test.csv -lr 0.001 -output result.csv -e 100
 ```
 
 
