@@ -110,6 +110,7 @@ model.add(BatchNormalization(axis=-1,center=True,scale=False))
 model.add(Dropout(.25))
 model.add(Dense(4,activation='softmax'))
 
+#model = MobileNet(weights=None,classes=4,classifier_activation='softmax')
 if args.load_model is not None:
     model = tf.keras.models.load_model(args.load_model)
 
