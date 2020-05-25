@@ -8,7 +8,6 @@ from tensorflow.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.keras.applications.mobilenet import MobileNet
 import os
 import cv2
-import random
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Model, load_model
 
@@ -44,7 +43,7 @@ parser.add_argument("-lr", "--learning_rate", type=float, default=0.001,
                     help="Learning rate.")
 parser.add_argument("-output", "--output_path", type=str, default="submission.csv",
                     help="Learning rate.")
-parser.add_argument("-e", "--epochs", type=int, default=1,
+parser.add_argument("-e", "--epochs", type=int, default=100,
                     help="Num of epochs to train.")
 parser.add_argument("-model", "--load_model", type=str, default=None,
                     help="Pretrained model.")
@@ -69,17 +68,59 @@ datagen = ImageDataGenerator(rotation_range=90,
                               fill_mode='nearest'
                               )
 
-model = MobileNet(classes=4, weights=None, classifier_activation='softmax')
+model = Sequential()
+
+model.add(Conv2D(32, kernel_size=(5,5),activation='relu', input_shape=(224, 224, 3)))#, kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Conv2D(64, kernel_size=(5,5),activation='relu'))#,kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(MaxPooling2D(pool_size=(2,2), padding='SAME'))
+model.add(Dropout(.25))
+
+model.add(Conv2D(32, kernel_size=(3,3),activation='relu'))#,kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Conv2D(64, kernel_size=(3,3),activation='relu'))#,kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(MaxPooling2D(pool_size=(2,2), padding='SAME'))
+model.add(Dropout(.25))
+
+model.add(Conv2D(64, kernel_size=(5,5),activation='relu'))#, kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Conv2D(128, kernel_size=(5,5),activation='relu',))#kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(MaxPooling2D(pool_size=(2,2), padding='SAME'))
+model.add(Dropout(.25))
+
+model.add(Conv2D(64, kernel_size=(3,3),activation='relu'))#,kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Conv2D(128, kernel_size=(3,3),activation='relu'))#,kernel_regularizer=l2(reg)))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(MaxPooling2D(pool_size=(2,2), padding='SAME'))
+model.add(Dropout(.25))
+
+model.add(Flatten())
+model.add(Dense(300,activation='relu'))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Dropout(.25))
+model.add(Dense(200,activation='relu'))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Dropout(.25))
+model.add(Dense(100,activation='relu'))
+model.add(BatchNormalization(axis=-1,center=True,scale=False))
+model.add(Dropout(.25))
+model.add(Dense(4,activation='softmax'))
+
 if args.load_model is not None:
     model = tf.keras.models.load_model(args.load_model)
-model.summary()
+
 model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=args.learning_rate), loss='categorical_crossentropy', metrics=['accuracy'] )
 callbacks = [
     keras.callbacks.TensorBoard(log_dir="logs/",histogram_freq=1)
 ]
 model.fit_generator(datagen.flow(x_train, y_train),epochs=args.epochs, callbacks=callbacks, validation_data=(x_val,y_val))
-model.save("model.h5")
 
+model.save("model.h5")
+model.summary()
 test_ids = load_csv(args.test_paths,"Testing")
 test_data = load_imgs('images',test_ids)
 
